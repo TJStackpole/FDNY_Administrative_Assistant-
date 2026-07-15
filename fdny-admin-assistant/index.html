@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FDNY Officer Administrative Assistant</title>
+<meta name="description" content="Administrative dashboard for FDNY officers: tone-controlled email drafting, fillable AARs, inspection reports and other paperwork, task tracking, and cloud/intranet integration." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#0B0E13;--bg-elev:#12171F;--bg-elev-2:#1A212C;--bg-elev-3:#232C3A;
+  --line:#222B39;--line-strong:#33404F;
+  --text:#E7ECF3;--text-dim:#93A0B4;--text-faint:#5D6B7E;
+  --red:#E4272E;--red-dk:#A2141B;--amber:#F5A623;--green:#35C46B;--cyan:#2FC6D4;--violet:#8B7BF0;--gold:#E9C46A;
+  --radius:10px;--radius-sm:6px;
+  --font-display:'Oswald','Arial Narrow',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:radial-gradient(1200px 600px at 82% -12%,rgba(228,39,46,.07),transparent 60%),var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.55}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px}
+a{color:var(--cyan)}
+.eyebrow{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.18em;font-weight:600;font-size:11px;color:var(--text-faint)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.signage{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+
+.app{display:grid;grid-template-columns:250px 1fr;grid-template-rows:auto 1fr;grid-template-areas:"topbar topbar" "nav main";height:100vh}
+.topbar{grid-area:topbar;display:flex;align-items:center;gap:16px;padding:11px 20px;background:linear-gradient(180deg,#10151d,#0c1017);border-bottom:1px solid var(--line)}
+.topbar__emblem{width:42px;height:42px;flex:none}
+.topbar__titles h1{margin:0;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;font-size:18px;font-weight:700}
+.topbar__titles h1 span{color:var(--red)}
+.topbar__sub{font-size:11px;color:var(--text-dim)}
+.topbar__right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tourpill{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-dim);background:var(--bg-elev);border:1px solid var(--line-strong);border-radius:999px;padding:6px 12px}
+.tourpill b{color:var(--gold)}
+
+.nav{grid-area:nav;background:var(--bg-elev);border-right:1px solid var(--line);overflow-y:auto;padding:10px 8px}
+.nav__group{margin:6px 6px 12px}
+.nav__label{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-faint);padding:8px 8px 4px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--radius-sm);color:var(--text-dim);text-decoration:none;font-size:13.5px;font-weight:500;border:1px solid transparent;margin-bottom:2px}
+.nav a:hover{background:var(--bg-elev-2);color:var(--text)}
+.nav a.on{background:var(--bg-elev-2);color:var(--text);border-color:var(--red)}
+.nav a svg{width:18px;height:18px;flex:none;color:inherit}
+.nav a .badge{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:#fff;background:var(--red);padding:1px 7px;border-radius:999px}
+
+.main{grid-area:main;overflow-y:auto;padding:24px 30px 80px}
+.view{max-width:1120px}
+.page-head h2{margin:0;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.03em;font-size:26px;font-weight:700}
+.page-head p{margin:4px 0 0;color:var(--text-dim);max-width:76ch}
+
+.section{margin-top:24px}
+.section__title{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.section__title h3{margin:0;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.08em;font-size:15px;font-weight:600}
+.section__title .rule{flex:1;height:1px;background:var(--line)}
+.section__title .tag{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+
+.panel{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.panel--pad0{padding:0;overflow:hidden}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+
+.stat{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius);padding:14px 15px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--line-strong))}
+.stat .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-faint);margin-bottom:8px}
+.stat .val{font-family:var(--font-mono);font-weight:700;font-size:28px;line-height:1}
+.stat .foot{margin-top:7px;font-size:11px;color:var(--text-dim)}
+
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--bg-elev-2);border:1px solid var(--line-strong);color:var(--text);padding:9px 15px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500}
+.btn:hover{border-color:var(--red)}
+.btn--red{background:var(--red);border-color:var(--red);color:#fff}.btn--red:hover{background:var(--red-dk)}
+.btn--ghost{background:transparent}.btn--sm{padding:6px 10px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.pill{font-family:var(--font-mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.03em;white-space:nowrap}
+.pill--green{background:rgba(53,196,107,.14);color:var(--green)}.pill--amber{background:rgba(245,166,35,.14);color:var(--amber)}
+.pill--red{background:rgba(228,39,46,.16);color:#ff6b70}.pill--cyan{background:rgba(47,198,212,.14);color:var(--cyan)}
+.pill--dim{background:var(--bg-elev-2);color:var(--text-dim)}.pill--violet{background:rgba(139,123,240,.16);color:var(--violet)}
+
+label.fld{display:block;margin-bottom:14px}
+label.fld .k{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);margin-bottom:6px}
+label.fld .help{font-size:11px;color:var(--text-faint);margin-top:4px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line-strong);color:var(--text);border-radius:var(--radius-sm);padding:9px 11px;font:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan)}
+textarea{min-height:70px;resize:vertical}
+input[type=range]{padding:0;accent-color:var(--red)}
+.slider-row{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--bg-elev-2);border:1px solid var(--line-strong);color:var(--text-dim);border-radius:999px;padding:6px 13px;cursor:pointer;font-size:12.5px;user-select:none}
+.chip:hover{border-color:var(--cyan);color:var(--text)}
+
+.notice{display:flex;gap:11px;align-items:flex-start;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.3);border-radius:var(--radius);padding:12px 15px;margin-bottom:18px;font-size:12.5px;color:var(--text-dim)}
+.notice b{color:var(--amber)}.notice a{color:var(--amber)}
+
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--bg-elev-2)}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}.tbl tbody tr:hover{background:var(--bg-elev-2)}
+
+.preview{background:#0c1017;border:1px solid var(--line-strong);border-radius:var(--radius);padding:18px 20px;white-space:pre-wrap;font-family:var(--font-body);font-size:13.5px;line-height:1.65;min-height:200px}
+.doc-preview h4{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;color:var(--cyan);margin:16px 0 6px;font-size:13px}
+.doc-preview .kv{margin:2px 0}
+.doc-preview .kv b{color:var(--text-dim);font-weight:600}
+.doc-hdr{border-bottom:2px solid var(--red);padding-bottom:10px;margin-bottom:12px}
+.doc-hdr .t{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:20px;font-weight:700}
+.doc-hdr .m{font-size:11px;color:var(--text-faint);font-family:var(--font-mono)}
+
+.tile{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius);padding:16px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;transition:border-color .12s,transform .12s}
+.tile:hover{border-color:var(--red);transform:translateY(-2px)}
+.tile .ico{width:32px;height:32px;color:var(--red)}
+.tile h4{margin:0;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.03em;font-size:15px}
+.tile p{margin:0;font-size:12px;color:var(--text-dim)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+
+.task{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:8px;background:var(--bg-elev)}
+.task.done{opacity:.6}
+.task .cb{width:22px;height:22px;border-radius:6px;border:1px solid var(--line-strong);background:var(--bg-elev-2);cursor:pointer;display:grid;place-items:center;flex:none;color:transparent}
+.task.done .cb{background:var(--green);border-color:var(--green);color:#06210f}
+.task .tk{flex:1}.task.done .tk{text-decoration:line-through}
+
+.doc-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.doc-row:last-child{border-bottom:none}
+.doc-row .di{flex:1;min-width:0}
+.doc-row .dt{font-weight:600}
+.doc-row .dm{font-size:11px;color:var(--text-faint);font-family:var(--font-mono);margin-top:2px}
+.empty{color:var(--text-dim);text-align:center;padding:40px 20px}
+@media (max-width:960px){.app{grid-template-columns:1fr;grid-template-areas:"topbar" "nav" "main";grid-template-rows:auto auto 1fr;height:auto}.nav{display:grid;grid-template-columns:repeat(2,1fr)}.g2,.g3,.g4{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <svg class="topbar__emblem" viewBox="0 0 240 240" aria-label="emblem placeholder">
+      <defs><linearGradient id="st" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3D27A"/><stop offset="1" stop-color="#C9992F"/></linearGradient>
+      <radialGradient id="cr" cx=".5" cy=".4" r=".75"><stop offset="0" stop-color="#E4272E"/><stop offset="1" stop-color="#A2141B"/></radialGradient></defs>
+      <circle cx="120" cy="120" r="116" fill="#0B0E13"/><circle cx="120" cy="120" r="116" fill="none" stroke="url(#st)" stroke-width="6"/>
+      <g transform="translate(120 120)" stroke="url(#st)" stroke-width="4" stroke-linejoin="round"><path fill="url(#cr)" d="M 0 -88 L 22 -44 L 60 -60 L 44 -22 L 88 0 L 44 22 L 60 60 L 22 44 L 0 88 L -22 44 L -60 60 L -44 22 L -88 0 L -44 -22 L -60 -60 L -22 -44 Z"/></g>
+      <circle cx="120" cy="120" r="30" fill="#0B0E13" stroke="url(#st)" stroke-width="3"/><text x="120" y="128" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="24" fill="#F3D27A">FD</text></svg>
+    <div class="topbar__titles"><h1>Officer <span>Admin</span> Assistant</h1><div class="topbar__sub">Email drafting · reports · daily admin</div></div>
+    <div class="topbar__right"><div class="tourpill">👤 <span id="whoName">—</span> · <b id="whoRank">—</b></div></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+/* ============================================================
+   FDNY Officer Administrative Assistant — single-file app
+   Report templates are GENERIC / illustrative, not official FDNY
+   forms. Replace with your department's official forms in the
+   Templates view or via content/manifest.json. Drafting and
+   report assembly run fully offline; an optional AI endpoint and
+   cloud/intranet endpoints can be configured in Settings.
+   ============================================================ */
+
+/* ---------- guarded store ---------- */
+const Store=(()=>{
+  const KEY='fdny_admin_v1';let mem={};let ok=true;
+  try{const t='__t';localStorage.setItem(t,'1');localStorage.removeItem(t);}catch(e){ok=false;}
+  function read(){if(!ok)return mem;try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+  function write(o){if(!ok){mem=o;return;}try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){mem=o;}}
+  return {get(k,d){const o=read();return k in o?o[k]:d;},set(k,v){const o=read();o[k]=v;write(o);}};
+})();
+
+/* ---------- helpers ---------- */
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>[...el.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=(p='id')=>p+'_'+Math.random().toString(36).slice(2,9);
+const nowISO=()=>new Date().toISOString();
+const todayKey=()=>new Date().toISOString().slice(0,10);
+const fmtDate=d=>new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+function icon(n){const p={
+  dashboard:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  report:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+  docs:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>',
+  template:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/>',
+  tasks:'<path d="M4 6l2 2 3-3M4 12l2 2 3-3M4 18l2 2 3-3M13 6h7M13 12h7M13 18h7"/>',
+  sync:'<path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',
+  book:'<path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 3v18"/>',
+  trash:'<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  spark:'<path d="M12 3l1.8 4.9L18.6 9l-4.8 1.1L12 15l-1.8-4.9L5.4 9l4.8-1.1z"/>'};
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p[n]||''}</svg>`;}
+
+/* ---------- profile / settings ---------- */
+const RANKS=['Lieutenant','Captain','Battalion Chief','Deputy Chief','Firefighter'];
+function profile(){return Store.get('profile',{name:'',rank:'Lieutenant',unit:'',email:'',phone:''});}
+function saveProfile(p){Store.set('profile',p);}
+function settings(){return Store.get('settings',{formality:4,directness:3,cloudEndpoint:'',intranetEndpoint:'',aiEndpoint:'',signature:'',useCustomSig:false});}
+function saveSettings(s){Store.set('settings',s);}
+function autoSignature(){const p=profile();const l=[];if(p.name)l.push(p.name);
+  const ru=[p.rank,p.unit].filter(Boolean).join(', ');if(ru)l.push(ru);
+  const cc=[p.email,p.phone].filter(Boolean).join(' · ');if(cc)l.push(cc);
+  return l.join('\n');}
+function signature(){const s=settings();if(s.useCustomSig&&(s.signature||'').trim())return s.signature;return autoSignature();}
+
+/* ---------- documents ---------- */
+const docs=()=>Store.get('docs',[]);
+function saveDocs(d){Store.set('docs',d);}
+function upsertDoc(doc){const d=docs();const i=d.findIndex(x=>x.id===doc.id);doc.updated=nowISO();if(i>=0)d[i]=doc;else{doc.created=nowISO();d.unshift(doc);}saveDocs(d);return doc;}
+function delDoc(id){saveDocs(docs().filter(x=>x.id!==id));}
+
+/* ---------- sync queue / adapters ---------- */
+const syncQueue=()=>Store.get('sync',[]);
+function saveSync(q){Store.set('sync',q);}
+function enqueue(kind,summary,payload){const q=syncQueue();q.unshift({id:uid('q'),kind,summary,payload,status:'pending',ts:nowISO()});saveSync(q);}
+async function pushItem(item){const s=settings();const endpoint=item.kind==='email'?s.intranetEndpoint:s.cloudEndpoint;
+  if(!endpoint)return {ok:false,reason:'no-endpoint'};
+  try{const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:item.kind,data:item.payload})});return {ok:r.ok,reason:r.ok?'':'http-'+r.status};}
+  catch(e){return {ok:false,reason:'network'};}}
+async function pushAll(){const q=syncQueue();let sent=0;for(const it of q){if(it.status==='sent')continue;const r=await pushItem(it);if(r.ok){it.status='sent';sent++;}else it.status=r.reason==='no-endpoint'?'pending':'error';}saveSync(q);return sent;}
+async function aiGenerate(system,user){const s=settings();if(!s.aiEndpoint)return null;
+  try{const r=await fetch(s.aiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system,prompt:user})});if(!r.ok)return null;const j=await r.json();return j.text||j.output||j.completion||(j.content&&j.content[0]&&j.content[0].text)||null;}
+  catch(e){return null;}}
+
+/* ============================================================
+   EMAIL TONE ENGINE (rule-based, offline)
+   ============================================================ */
+const CONTRACT=[["I am","I'm"],["you are","you're"],["we are","we're"],["they are","they're"],["do not","don't"],["does not","doesn't"],["did not","didn't"],["cannot","can't"],["will not","won't"],["would not","wouldn't"],["should not","shouldn't"],["is not","isn't"],["are not","aren't"],["I will","I'll"],["we will","we'll"],["it is","it's"],["that is","that's"],["I would","I'd"],["I have","I've"],["let us","let's"]];
+function expandContractions(t){let s=t;CONTRACT.forEach(([full,c])=>{s=s.replace(new RegExp(c.replace(/'/g,"[’']"),'gi'),m=>matchCase(m,full));});return s;}
+function addContractions(t){let s=t;CONTRACT.forEach(([full,c])=>{s=s.replace(new RegExp('\\b'+full+'\\b','gi'),m=>matchCase(m,c));});return s;}
+function matchCase(src,repl){return src[0]===src[0].toUpperCase()?repl.charAt(0).toUpperCase()+repl.slice(1):repl;}
+const HEDGES=['just ','maybe ','I think ','kind of ','sort of ','if you get a chance, ','when you get a chance, ','I was wondering if '];
+function removeHedges(t){let s=t;HEDGES.forEach(h=>{s=s.replace(new RegExp(h,'gi'),'');});return s.replace(/\s{2,}/g,' ');}
+
+function greeting(name,rank,formality){
+  const first=(name||'').trim().split(/\s+/)[0]||'there';
+  const last=(name||'').trim().split(/\s+/).slice(1).join(' ');
+  if(formality<=1)return `Hey ${first},`;
+  if(formality===2)return `Hi ${first},`;
+  if(formality===3)return `Hi ${name||first},`;
+  if(rank&&last)return `Dear ${rank} ${last},`;
+  return formality>=5?`Dear ${name||first},`:`Hello ${name||first},`;
+}
+function opener(purpose,directness,length){
+  const p=(purpose||'this').replace(/\.$/,'');const pl=p.charAt(0).toLowerCase()+p.slice(1);
+  if(length==='brief'){return directness>=4?`${cap(p)}.`:`Quick note on ${pl}.`;}
+  if(directness<=2)return `Hope you're doing well. I wanted to reach out about ${pl}.`;
+  if(directness===3)return `I'm writing regarding ${pl}.`;
+  if(directness===4)return `${cap(p)}.`;
+  return `Getting straight to it — ${pl}.`;
+}
+function callToAction(action,directness,deadline){
+  if(!action)return '';const a=action.replace(/\.$/,'');const al=a.charAt(0).toLowerCase()+a.slice(1);
+  const by=deadline?` by ${deadline}`:'';
+  if(directness<=2)return `If you get a chance, could you ${al}${by}? No pressure.`;
+  if(directness===3)return `Could you ${al}${by} when you have a moment?`;
+  if(directness===4)return `Please ${al}${by}.`;
+  return `Please ${al}${by}. Let me know if that's a problem.`;
+}
+function closer(formality){return formality<=2?'Thanks,':formality===3?'Thanks,':formality===4?'Best regards,':'Respectfully,';}
+function buildEmail(cfg){
+  const points=(cfg.points||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  let body=greeting(cfg.recipientName,cfg.recipientRank,cfg.formality)+'\n\n';
+  body+=opener(cfg.purpose,cfg.directness,cfg.length);
+  if(points.length===1){body+=' '+ensureSentence(points[0]);}
+  else if(points.length>1){body+='\n\n'+points.map(p=>'- '+p.replace(/^[-•]\s*/,'')).join('\n');}
+  const cta=callToAction(cfg.action,cfg.directness,cfg.deadline);
+  if(cta)body+='\n\n'+cta;
+  if(cfg.length==='detailed')body+='\n\nHappy to discuss further — just let me know what works.';
+  body+='\n\n'+closer(cfg.formality)+'\n'+(cfg.includeSig!==false?signature():(profile().name||''));
+  // formality contraction pass
+  body=cfg.formality>=4?expandContractions(body):addContractions(body);
+  if(cfg.formality>=4)body=body.replace(/!/g,'.');
+  const subject=cfg.subject|| (cfg.purpose?cap(cfg.purpose.replace(/\.$/,'')):'FDNY correspondence');
+  return {subject,body};
+}
+function ensureSentence(s){s=s.trim();if(!/[.!?]$/.test(s))s+='.';return s.charAt(0).toUpperCase()+s.slice(1);}
+function retone(text,formality,directness){
+  let s=text;
+  s=formality>=4?expandContractions(s):addContractions(s);
+  if(formality>=4)s=s.replace(/!+/g,'.');
+  if(directness>=4)s=removeHedges(s);
+  else if(directness<=2){s=s.replace(/\bPlease\b/g,'When you get a chance, please').replace(/\bcould you\b/gi,m=>m);}
+  return s.replace(/[ \t]{2,}/g,' ');
+}
+
+/* ============================================================
+   REPORT TEMPLATES (generic / illustrative)
+   ============================================================ */
+function seedForms(){return [
+  {id:'aar',name:'After Action Report (AAR)',cat:'Operations',sections:[
+    {title:'Incident Information',fields:[
+      {id:'date',label:'Date / time',type:'text',ph:'2026-07-13 14:20'},
+      {id:'location',label:'Location',type:'text'},
+      {id:'itype',label:'Incident type',type:'text',ph:'Structural fire, MVA, EMS…'},
+      {id:'alarm',label:'Box / alarm #',type:'text'},
+      {id:'units',label:'Units on scene',type:'textarea'},
+      {id:'ic',label:'Incident commander',type:'text'}]},
+    {title:'Narrative Summary',fields:[{id:'summary',label:'What happened',type:'textarea'}]},
+    {title:'Timeline',fields:[{id:'timeline',label:'Key times & events (one per line)',type:'textarea',ph:'14:20 — dispatched\n14:26 — on scene, 10-75 transmitted'}]},
+    {title:'Assessment',fields:[
+      {id:'sustain',label:'What went well (sustain)',type:'textarea'},
+      {id:'improve',label:'What to improve',type:'textarea'},
+      {id:'recs',label:'Recommendations / action items',type:'textarea'}]},
+    {title:'Safety',fields:[{id:'injuries',label:'Injuries / exposures',type:'textarea',ph:'None, or describe'}]},
+  ]},
+  {id:'inspection',name:'Company Inspection Report',cat:'Fire Prevention',sections:[
+    {title:'Premises',fields:[
+      {id:'address',label:'Address',type:'text'},
+      {id:'occupancy',label:'Occupancy type',type:'text'},
+      {id:'rep',label:'Owner / representative',type:'text'},
+      {id:'date',label:'Inspection date',type:'text'},
+      {id:'inspector',label:'Inspector',type:'text'}]},
+    {title:'Findings',fields:[
+      {id:'findings',label:'Findings / violations (one per line)',type:'textarea'},
+      {id:'coderef',label:'Code references (FC / RCNY)',type:'textarea'}]},
+    {title:'Resolution',fields:[
+      {id:'corrective',label:'Corrective actions & deadlines',type:'textarea'},
+      {id:'followup',label:'Follow-up required',type:'select',options:['No','Yes']},
+      {id:'fdate',label:'Follow-up date',type:'text'},
+      {id:'notes',label:'Officer notes',type:'textarea'}]},
+  ]},
+  {id:'oos',name:'Apparatus / Equipment Out-of-Service',cat:'Operations',sections:[
+    {title:'Unit',fields:[
+      {id:'unit',label:'Unit / apparatus',type:'text'},
+      {id:'oostime',label:'Date/time out of service',type:'text'},
+      {id:'reason',label:'Reason',type:'textarea'},
+      {id:'affected',label:'Tools / systems affected',type:'textarea'}]},
+    {title:'Coverage',fields:[
+      {id:'coverage',label:'Coverage arranged',type:'textarea'},
+      {id:'notified',label:'Notifications made (who / when)',type:'textarea'},
+      {id:'eta',label:'Expected return to service',type:'text'}]},
+  ]},
+  {id:'drill',name:'Drill / Training Record',cat:'Training',sections:[
+    {title:'Session',fields:[
+      {id:'date',label:'Date',type:'text'},
+      {id:'topic',label:'Topic',type:'text'},
+      {id:'instructor',label:'Instructor',type:'text'},
+      {id:'duration',label:'Duration',type:'text'},
+      {id:'members',label:'Members present',type:'textarea'}]},
+    {title:'Content',fields:[
+      {id:'refs',label:'References used',type:'textarea'},
+      {id:'eval',label:'Evaluation / notes',type:'textarea'},
+      {id:'next',label:'Next steps',type:'textarea'}]},
+  ]},
+  {id:'roster',name:'Tour Roster / Riding Assignment',cat:'Operations',sections:[
+    {title:'Tour',fields:[
+      {id:'date',label:'Date / tour',type:'text'},
+      {id:'unit',label:'Unit',type:'text'},
+      {id:'officer',label:'Officer',type:'text'}]},
+    {title:'Assignments',fields:[
+      {id:'positions',label:'Riding positions (one per line: Position — Member)',type:'textarea',ph:'ECC — \nNozzle — \nBackup — \nControl — \nDoor — '},
+      {id:'notes',label:'Notes / details',type:'textarea'}]},
+  ]},
+  {id:'memo',name:'Memo / Correspondence',cat:'Administration',sections:[
+    {title:'Header',fields:[
+      {id:'to',label:'To',type:'text'},
+      {id:'cc',label:'CC',type:'text'},
+      {id:'subject',label:'Subject',type:'text'}]},
+    {title:'Body',fields:[{id:'body',label:'Body',type:'textarea'}]},
+  ]},
+];}
+function forms(){let f=Store.get('forms',null);if(!f){f=seedForms();Store.set('forms',f);}return f;}
+function saveForms(f){Store.set('forms',f);}
+function formById(id){return forms().find(f=>f.id===id);}
+function generateReport(form,values){
+  const p=profile();
+  let out=`${(p.unit||'FDNY Unit')} — ${form.name}\n`;
+  out+=`Prepared by: ${p.name||'—'}${p.rank?', '+p.rank:''}\n`;
+  out+=`Generated: ${new Date().toLocaleString('en-US')}\n`;
+  out+='='.repeat(52)+'\n';
+  form.sections.forEach(sec=>{
+    out+=`\n${sec.title.toUpperCase()}\n`+'-'.repeat(sec.title.length)+'\n';
+    sec.fields.forEach(f=>{const v=(values[f.id]||'').trim();if(!v)return;
+      if(f.type==='textarea'||v.includes('\n'))out+=`${f.label}:\n${v}\n\n`;
+      else out+=`${f.label}: ${v}\n`;});
+  });
+  return out.trim()+'\n';
+}
+
+/* ---------- tasks ---------- */
+function seedTasks(){return ['Review company journal / log','Confirm riding list & roll call','Inspect apparatus & tools','Check department email / orders','Update leave & time records','Complete AAR for last run','Log training / drill','Review open inspections'].map(t=>({id:uid('tk'),label:t}));}
+function tasksList(){let t=Store.get('tasks',null);if(!t){t=seedTasks();Store.set('tasks',t);}return t;}
+function saveTasks(t){Store.set('tasks',t);}
+function taskDone(){return Store.get('taskDone',{});}
+function setTaskDone(map){Store.set('taskDone',map);}
+function doneToday(id){const m=taskDone();return (m[todayKey()]||[]).includes(id);}
+function toggleTask(id){const m=taskDone();const k=todayKey();m[k]=m[k]||[];if(m[k].includes(id))m[k]=m[k].filter(x=>x!==id);else m[k].push(id);setTaskDone(m);}
+
+/* ---------- export utils ---------- */
+function downloadFile(name,type,content){const blob=new Blob([content],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function printText(title,text){const w=window.open('','_blank');if(!w)return;
+  w.document.write(`<html><head><title>${esc(title)}</title><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:0 20px;white-space:pre-wrap;line-height:1.5;font-size:13px}h1{font-family:Arial;font-size:18px;border-bottom:2px solid #c00;padding-bottom:6px}</style></head><body><pre style="white-space:pre-wrap;font-family:inherit">${esc(text)}</pre></body></html>`);
+  w.document.close();w.focus();setTimeout(()=>w.print(),300);}
+function copyText(t){navigator.clipboard&&navigator.clipboard.writeText(t);}
+
+/* ============================================================
+   NAV / ROUTER
+   ============================================================ */
+const VIEWS=[
+  {id:'dashboard',label:'Dashboard',icon:'dashboard',group:'Overview',fn:viewDashboard},
+  {id:'tasks',label:'Daily Tasks',icon:'tasks',group:'Overview',fn:viewTasks},
+  {id:'email',label:'Email Composer',icon:'mail',group:'Drafting',fn:viewEmail},
+  {id:'reports',label:'Reports',icon:'report',group:'Drafting',fn:viewReports},
+  {id:'documents',label:'My Documents',icon:'docs',group:'Drafting',fn:viewDocuments},
+  {id:'templates',label:'Templates',icon:'template',group:'System',fn:viewTemplates},
+  {id:'settings',label:'Settings & Integrations',icon:'sync',group:'System',fn:viewSettings},
+  {id:'reference',label:'Reference',icon:'book',group:'System',fn:viewReference},
+];
+function pendingSync(){return syncQueue().filter(q=>q.status!=='sent').length;}
+function renderNav(){
+  const cur=(location.hash||'#dashboard').slice(1).split('/')[0];
+  const groups=[...new Set(VIEWS.map(v=>v.group))];
+  $('#nav').innerHTML=groups.map(g=>`<div class="nav__group"><div class="nav__label">${g}</div>${
+    VIEWS.filter(v=>v.group===g).map(v=>`<a href="#${v.id}" class="${v.id===cur?'on':''}">${icon(v.icon)}<span>${v.label}</span>${
+      v.id==='documents'&&docs().filter(d=>d.status==='draft').length?`<span class="badge">${docs().filter(d=>d.status==='draft').length}</span>`:''}</a>`).join('')}</div>`).join('');
+}
+function renderTop(){const p=profile();$('#whoName').textContent=p.name||'Set profile';$('#whoRank').textContent=p.rank||'—';}
+function route(){renderTop();renderNav();
+  const id=(location.hash||'#dashboard').slice(1).split('/')[0];const arg=(location.hash||'').split('/')[1];
+  const v=VIEWS.find(x=>x.id===id)||VIEWS[0];$('#main').innerHTML='';v.fn($('#main'),arg);$('#main').scrollTop=0;}
+window.addEventListener('hashchange',route);
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+function viewDashboard(el){
+  const p=profile();const d=docs();const tl=tasksList();const doneN=tl.filter(t=>doneToday(t.id)).length;
+  const drafts=d.filter(x=>x.status==='draft').length;
+  el.innerHTML=`<div class="view">
+    <div class="page-head"><h2>Admin Dashboard</h2><p>${p.name?('Welcome, '+esc(p.rank)+' '+esc(p.name)+'. '):''}Draft correspondence, complete reports, and clear your admin tasks for the tour.</p></div>
+    ${p.name?'':'<div class="notice"><span>ⓘ</span><div>Set your name, rank, and unit in <a href="#settings">Settings</a> — it auto-fills your email signature and every report header.</div></div>'}
+    <div class="grid g4">
+      <div class="stat" style="--accent:var(--red)"><div class="lbl">Tasks today</div><div class="val">${doneN}<span style="font-size:12px;color:var(--text-dim)">/${tl.length}</span></div><div class="foot">${tl.length-doneN} remaining</div></div>
+      <div class="stat" style="--accent:var(--amber)"><div class="lbl">Draft documents</div><div class="val">${drafts}</div><div class="foot">awaiting finalize</div></div>
+      <div class="stat" style="--accent:var(--green)"><div class="lbl">Total documents</div><div class="val">${d.length}</div><div class="foot">emails + reports</div></div>
+      <div class="stat" style="--accent:var(--cyan)"><div class="lbl">Pending sync</div><div class="val">${pendingSync()}</div><div class="foot">${settings().cloudEndpoint||settings().intranetEndpoint?'ready to push':'configure in Settings'}</div></div>
+    </div>
+    <div class="section"><div class="section__title"><h3>Quick actions</h3><span class="rule"></span></div>
+      <div class="tiles">
+        <a class="tile" href="#email"><div class="ico">${icon('mail')}</div><h4>New email</h4><p>Draft with tone controls</p></a>
+        <a class="tile" href="#reports/aar"><div class="ico">${icon('report')}</div><h4>New AAR</h4><p>After action report</p></a>
+        <a class="tile" href="#reports/inspection"><div class="ico">${icon('report')}</div><h4>Inspection</h4><p>Company inspection report</p></a>
+        <a class="tile" href="#reports/memo"><div class="ico">${icon('docs')}</div><h4>Memo</h4><p>General correspondence</p></a>
+        <a class="tile" href="#tasks"><div class="ico">${icon('tasks')}</div><h4>Daily tasks</h4><p>Officer admin checklist</p></a>
+      </div></div>
+    <div class="section"><div class="section__title"><h3>Recent documents</h3><span class="rule"></span><a class="tag" href="#documents">view all ›</a></div>
+      <div class="panel panel--pad0">${d.length?d.slice(0,6).map(docRow).join(''):'<div class="empty">Nothing yet. Start an email or a report above.</div>'}</div>
+    </div></div>`;
+}
+function docRow(doc){const st=doc.status||'draft';const pill=st==='submitted'?'pill--green':st==='final'?'pill--cyan':'pill--dim';
+  return `<div class="doc-row"><span class="pill pill--dim">${doc.type==='email'?'Email':'Report'}</span>
+    <div class="di"><div class="dt">${esc(doc.title||'(untitled)')}</div><div class="dm">updated ${fmtDate(doc.updated||doc.created)}</div></div>
+    <span class="pill ${pill}">${st}</span>
+    <a class="btn btn--sm btn--ghost" href="#${doc.type==='email'?'email':'reports'}/${doc.type==='email'?'edit_'+doc.id:doc.formId+'__'+doc.id}">Open</a></div>`;}
+
+/* ---------- Daily Tasks ---------- */
+function viewTasks(el){
+  const render=()=>{const tl=tasksList();
+    $('#taskList',el).innerHTML=tl.map(t=>`<div class="task ${doneToday(t.id)?'done':''}" data-id="${t.id}">
+      <button class="cb" data-toggle="${t.id}">✓</button><div class="tk">${esc(t.label)}</div>
+      <button class="btn btn--sm btn--ghost" data-del="${t.id}">${icon('trash')}</button></div>`).join('')||'<div class="empty">No tasks — add your recurring admin duties.</div>';
+    $$('[data-toggle]',el).forEach(b=>b.onclick=()=>{toggleTask(b.dataset.toggle);render();renderNav();});
+    $$('[data-del]',el).forEach(b=>b.onclick=()=>{saveTasks(tasksList().filter(t=>t.id!==b.dataset.del));render();});
+  };
+  el.innerHTML=`<div class="view"><div class="page-head"><h2>Daily Admin Tasks</h2><p>The recurring administrative duties an officer clears each tour. Customizable — check them off as you go; they reset each day.</p></div>
+    <div class="btnrow" style="margin-bottom:14px"><input id="newTask" placeholder="Add a task…" style="max-width:340px"><button class="btn btn--red" id="addTask">${icon('plus')} Add</button></div>
+    <div id="taskList"></div></div>`;
+  const add=()=>{const v=$('#newTask',el).value.trim();if(!v)return;saveTasks(tasksList().concat([{id:uid('tk'),label:v}]));$('#newTask',el).value='';render();};
+  $('#addTask',el).onclick=add;$('#newTask',el).onkeydown=e=>{if(e.key==='Enter')add();};
+  render();
+}
+
+/* ---------- Email Composer ---------- */
+function viewEmail(el,arg){
+  const s=settings();
+  let editId=arg&&arg.startsWith('edit_')?arg.slice(5):null;
+  let cfg;
+  if(editId){const doc=docs().find(d=>d.id===editId);cfg=doc?Object.assign({},doc.cfg):null;}
+  cfg=cfg||{recipientName:'',recipientRank:'',relationship:'Colleague',purpose:'',points:'',action:'',deadline:'',
+    formality:s.formality||4,directness:s.directness||3,length:'standard',includeSig:true,subject:''};
+  el.innerHTML=`<div class="view"><div class="page-head"><h2>Email Composer</h2>
+    <p>Draft an email, then dial in how <b>professional</b> and how <b>direct</b> it reads. Generation runs offline; connect an AI endpoint in Settings for full rewrites.</p></div>
+    <div class="grid" style="grid-template-columns:minmax(320px,420px) 1fr;gap:16px">
+      <div class="panel">
+        <div class="grid g2" style="gap:0 12px">
+          <label class="fld"><span class="k">Recipient name</span><input id="e_name" value="${esc(cfg.recipientName)}" placeholder="Mike / Chief Rivera"></label>
+          <label class="fld"><span class="k">Their rank (optional)</span><input id="e_rank" value="${esc(cfg.recipientRank)}" placeholder="Chief, Capt."></label>
+        </div>
+        <label class="fld"><span class="k">Relationship</span><select id="e_rel">${['Friend','Colleague','Work associate','Superior officer','Subordinate','External / civilian','Vendor'].map(r=>`<option ${r===cfg.relationship?'selected':''}>${r}</option>`).join('')}</select></label>
+        <label class="fld"><span class="k">Purpose / subject</span><input id="e_purpose" value="${esc(cfg.purpose)}" placeholder="the mutual-aid drill next week"></label>
+        <label class="fld"><span class="k">Key points (one per line)</span><textarea id="e_points" placeholder="Confirm the date works\nWe need two members from your house">${esc(cfg.points)}</textarea></label>
+        <div class="grid g2" style="gap:0 12px">
+          <label class="fld"><span class="k">Requested action</span><input id="e_action" value="${esc(cfg.action)}" placeholder="confirm attendance"></label>
+          <label class="fld"><span class="k">Deadline (optional)</span><input id="e_deadline" value="${esc(cfg.deadline)}" placeholder="Friday"></label>
+        </div>
+        <label class="fld"><span class="k">Professionalism</span><input type="range" id="e_form" min="1" max="5" value="${cfg.formality}">
+          <div class="slider-row"><span>Less professional</span><span>More professional</span></div></label>
+        <label class="fld"><span class="k">Directness</span><input type="range" id="e_dir" min="1" max="5" value="${cfg.directness}">
+          <div class="slider-row"><span>Less direct</span><span>More direct</span></div></label>
+        <label class="fld"><span class="k">Length</span><select id="e_len">${['brief','standard','detailed'].map(l=>`<option ${l===cfg.length?'selected':''}>${l}</option>`).join('')}</select></label>
+        <div class="chips" style="margin-bottom:6px">
+          <span class="chip" data-preset="pro">Professional</span><span class="chip" data-preset="casual">Casual</span>
+          <span class="chip" data-preset="direct">More direct</span><span class="chip" data-preset="soft">Softer</span></div>
+      </div>
+      <div class="panel">
+        <div class="section__title" style="margin-top:0"><h3>Draft</h3><span class="rule"></span><span class="tag" id="toneTag"></span></div>
+        <label class="fld"><span class="k">Subject</span><input id="e_subject" value="${esc(cfg.subject)}"></label>
+        <textarea id="e_body" style="min-height:300px;font-family:var(--font-mono);font-size:12.5px"></textarea>
+        <div class="btnrow" style="margin-top:12px">
+          <button class="btn btn--red" id="e_regen">↻ Regenerate</button>
+          <button class="btn" id="e_copy">${icon('copy')} Copy</button>
+          <button class="btn" id="e_mail">Open in mail</button>
+          <button class="btn" id="e_save">Save to Documents</button>
+          <button class="btn btn--ghost" id="e_sig">Insert signature</button>
+          ${s.aiEndpoint?`<button class="btn btn--ghost" id="e_ai">${icon('spark')} Improve with AI</button>`:''}
+          <span id="e_msg" style="color:var(--text-dim);font-size:12px"></span>
+        </div>
+        <p style="color:var(--text-faint);font-size:11px;margin-top:8px">"Regenerate" rebuilds from the fields at the current tone. Edit the draft directly anytime; "Copy"/"Save" use what's in the box.</p>
+      </div>
+    </div></div>`;
+  const readCfg=()=>({recipientName:$('#e_name',el).value,recipientRank:$('#e_rank',el).value,relationship:$('#e_rel',el).value,
+    purpose:$('#e_purpose',el).value,points:$('#e_points',el).value,action:$('#e_action',el).value,deadline:$('#e_deadline',el).value,
+    formality:+$('#e_form',el).value,directness:+$('#e_dir',el).value,length:$('#e_len',el).value,subject:$('#e_subject',el).value,includeSig:true});
+  const toneWord=(f)=>['very casual','casual','neutral','professional','formal'][f-1];
+  const dirWord=(d)=>['very soft','soft','balanced','direct','very direct'][d-1];
+  const regen=()=>{const c=readCfg();const {subject,body}=buildEmail(c);$('#e_subject',el).value=subject;$('#e_body',el).value=body;
+    $('#toneTag',el).textContent=`${toneWord(c.formality)} · ${dirWord(c.directness)}`;};
+  ['e_name','e_rank','e_rel','e_purpose','e_points','e_action','e_deadline','e_len'].forEach(id=>$('#'+id,el).addEventListener('input',regen));
+  $('#e_form',el).addEventListener('input',regen);$('#e_dir',el).addEventListener('input',regen);
+  $('#e_regen',el).onclick=regen;
+  $$('[data-preset]',el).forEach(c=>c.onclick=()=>{const f=$('#e_form',el),d=$('#e_dir',el);const P=c.dataset.preset;
+    if(P==='pro'){f.value=4;d.value=3;}if(P==='casual'){f.value=2;d.value=3;}
+    if(P==='direct'){d.value=Math.min(5,+d.value+1);}if(P==='soft'){d.value=Math.max(1,+d.value-1);}regen();});
+  $('#e_copy',el).onclick=()=>{copyText($('#e_body',el).value);$('#e_msg',el).textContent='Copied.';};
+  $('#e_mail',el).onclick=()=>{const sub=encodeURIComponent($('#e_subject',el).value);const bod=encodeURIComponent($('#e_body',el).value);location.href=`mailto:?subject=${sub}&body=${bod}`;};
+  $('#e_save',el).onclick=()=>{const c=readCfg();const doc=upsertDoc({id:editId||uid('doc'),type:'email',title:c.subject||'Email draft',cfg:c,output:$('#e_body',el).value,status:'draft'});editId=doc.id;$('#e_msg',el).textContent='Saved to Documents.';renderNav();};
+  $('#e_sig',el).onclick=()=>{const sig=signature();if(!sig){$('#e_msg',el).textContent='No signature set — add one in Settings.';return;}
+    const box=$('#e_body',el);if(box.value.includes(sig)){$('#e_msg',el).textContent='Signature already in draft.';return;}
+    box.value=box.value.replace(/\s*$/,'')+'\n\n'+sig;$('#e_msg',el).textContent='Signature inserted.';};
+  const aiBtn=$('#e_ai',el);if(aiBtn)aiBtn.onclick=async()=>{$('#e_msg',el).textContent='Asking AI…';const c=readCfg();
+    const sys='You are an assistant helping an FDNY officer write email. Match the requested tone precisely and keep it concise.';
+    const usr=`Rewrite/improve this email. Professionalism ${c.formality}/5, directness ${c.directness}/5.\n\n${$('#e_body',el).value}`;
+    const out=await aiGenerate(sys,usr);if(out){$('#e_body',el).value=out;$('#e_msg',el).textContent='Updated with AI.';}else $('#e_msg',el).textContent='AI endpoint not reachable — using your draft.';};
+  regen();
+}
+
+/* ---------- Reports ---------- */
+function viewReports(el,arg){
+  // arg can be: formId  OR  formId__docId  (edit)
+  let formId=null,docId=null;
+  if(arg){if(arg.includes('__')){[formId,docId]=arg.split('__');}else formId=arg;}
+  if(!formId){
+    const cats=[...new Set(forms().map(f=>f.cat))];
+    el.innerHTML=`<div class="view"><div class="page-head"><h2>Reports & Paperwork</h2>
+      <p>Pick a form to fill out. Each generates a clean, formatted document you can copy, print to PDF, save, or push to the cloud. Templates are generic — customize them in <a href="#templates">Templates</a>.</p></div>
+      ${seedFormNotice}
+      ${cats.map(cat=>`<div class="section"><div class="section__title"><h3>${esc(cat)}</h3><span class="rule"></span></div>
+        <div class="tiles">${forms().filter(f=>f.cat===cat).map(f=>`<a class="tile" href="#reports/${f.id}"><div class="ico">${icon('report')}</div><h4>${esc(f.name)}</h4><p>${f.sections.length} sections</p></a>`).join('')}</div></div>`).join('')}
+    </div>`;
+    return;
+  }
+  const form=formById(formId);if(!form){el.innerHTML='<div class="view"><div class="empty">Unknown form. <a href="#reports">Back</a></div></div>';return;}
+  let values={};if(docId){const doc=docs().find(d=>d.id===docId);if(doc)values=Object.assign({},doc.values);}
+  el.innerHTML=`<div class="view"><div class="page-head"><h2>${esc(form.name)}</h2><p><a href="#reports">‹ All forms</a> · fields save into your document; the preview updates live.</p></div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div class="panel" style="max-height:74vh;overflow:auto">
+        ${form.sections.map(sec=>`<div class="section" style="margin-top:0"><div class="section__title"><h3>${esc(sec.title)}</h3><span class="rule"></span></div>
+          ${sec.fields.map(f=>fieldInput(f,values[f.id])).join('')}</div>`).join('')}
+      </div>
+      <div class="panel">
+        <div class="section__title" style="margin-top:0"><h3>Preview</h3><span class="rule"></span><span class="tag" id="r_status">draft</span></div>
+        <div class="preview" id="r_prev"></div>
+        <div class="btnrow" style="margin-top:12px">
+          <button class="btn btn--red" id="r_save">Save</button>
+          <button class="btn" id="r_copy">${icon('copy')} Copy</button>
+          <button class="btn" id="r_print">Print / PDF</button>
+          <button class="btn" id="r_md">Export .txt</button>
+          <button class="btn btn--ghost" id="r_push">Queue to cloud</button>
+          <span id="r_msg" style="color:var(--text-dim);font-size:12px"></span>
+        </div>
+      </div>
+    </div></div>`;
+  const read=()=>{const v={};form.sections.forEach(sec=>sec.fields.forEach(f=>{const inp=$('#f_'+f.id,el);if(inp)v[f.id]=inp.value;}));return v;};
+  const refresh=()=>{values=read();$('#r_prev',el).textContent=generateReport(form,values);};
+  form.sections.forEach(sec=>sec.fields.forEach(f=>{const inp=$('#f_'+f.id,el);if(inp)inp.addEventListener('input',refresh);}));
+  const title=()=>form.name+(values.address?(' — '+values.address):values.location?(' — '+values.location):values.subject?(' — '+values.subject):'');
+  $('#r_save',el).onclick=()=>{values=read();const doc=upsertDoc({id:docId||uid('doc'),type:'report',formId:form.id,title:title(),values,output:generateReport(form,values),status:'draft'});docId=doc.id;$('#r_msg',el).textContent='Saved to Documents.';renderNav();};
+  $('#r_copy',el).onclick=()=>{copyText(generateReport(form,read()));$('#r_msg',el).textContent='Copied.';};
+  $('#r_print',el).onclick=()=>printText(form.name,generateReport(form,read()));
+  $('#r_md',el).onclick=()=>downloadFile(form.id+'-'+todayKey()+'.txt','text/plain',generateReport(form,read()));
+  $('#r_push',el).onclick=()=>{values=read();enqueue('report',form.name+' — '+title(),{formId:form.id,values,output:generateReport(form,values)});$('#r_msg',el).textContent='Queued for cloud (push in Settings).';renderNav();};
+  refresh();
+}
+function fieldInput(f,val){val=val||'';
+  if(f.type==='textarea')return `<label class="fld"><span class="k">${esc(f.label)}</span><textarea id="f_${f.id}" placeholder="${esc(f.ph||'')}">${esc(val)}</textarea></label>`;
+  if(f.type==='select')return `<label class="fld"><span class="k">${esc(f.label)}</span><select id="f_${f.id}">${(f.options||[]).map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}</select></label>`;
+  return `<label class="fld"><span class="k">${esc(f.label)}</span><input id="f_${f.id}" value="${esc(val)}" placeholder="${esc(f.ph||'')}"></label>`;
+}
+
+/* ---------- My Documents ---------- */
+function viewDocuments(el){
+  let filter='all';
+  const render=()=>{const list=docs().filter(d=>filter==='all'?true:filter==='email'?d.type==='email':filter==='report'?d.type==='report':d.status===filter);
+    $('#docList',el).innerHTML=list.length?list.map(d=>`<div class="doc-row"><span class="pill pill--dim">${d.type==='email'?'Email':'Report'}</span>
+      <div class="di"><div class="dt">${esc(d.title||'(untitled)')}</div><div class="dm">updated ${fmtDate(d.updated||d.created)}</div></div>
+      <select data-status="${d.id}" style="width:auto;padding:5px 8px">${['draft','final','submitted'].map(s=>`<option ${s===(d.status||'draft')?'selected':''}>${s}</option>`).join('')}</select>
+      <a class="btn btn--sm" href="#${d.type==='email'?'email/edit_'+d.id:'reports/'+d.formId+'__'+d.id}">Open</a>
+      <button class="btn btn--sm btn--ghost" data-copy="${d.id}">${icon('copy')}</button>
+      <button class="btn btn--sm btn--ghost" data-push="${d.id}">Cloud</button>
+      <button class="btn btn--sm btn--ghost" data-del="${d.id}">${icon('trash')}</button></div>`).join(''):'<div class="empty">No documents yet.</div>';
+    $$('[data-status]',el).forEach(sel2=>sel2.onchange=()=>{const d=docs();const doc=d.find(x=>x.id===sel2.dataset.status);doc.status=sel2.value;saveDocs(d);render();renderNav();});
+    $$('[data-copy]',el).forEach(b=>b.onclick=()=>{const doc=docs().find(x=>x.id===b.dataset.copy);copyText(doc.output||'');});
+    $$('[data-push]',el).forEach(b=>b.onclick=()=>{const doc=docs().find(x=>x.id===b.dataset.push);enqueue(doc.type,doc.title,{id:doc.id,output:doc.output});alert('Queued for '+(doc.type==='email'?'intranet':'cloud')+' — push from Settings.');renderNav();});
+    $$('[data-del]',el).forEach(b=>b.onclick=()=>{if(confirm('Delete this document?')){delDoc(b.dataset.del);render();renderNav();}});
+  };
+  el.innerHTML=`<div class="view"><div class="page-head"><h2>My Documents</h2><p>Every email and report you've saved. Set status, reopen to edit, export, or queue to the FDNY cloud/intranet.</p></div>
+    <div class="btnrow" style="margin-bottom:14px" id="docFilter">
+      <button class="btn btn--sm btn--red" data-f="all">All</button><button class="btn btn--sm btn--ghost" data-f="email">Emails</button>
+      <button class="btn btn--sm btn--ghost" data-f="report">Reports</button><button class="btn btn--sm btn--ghost" data-f="draft">Drafts</button></div>
+    <div class="panel panel--pad0" id="docList"></div></div>`;
+  $('#docFilter',el).onclick=e=>{const b=e.target.closest('[data-f]');if(b){filter=b.dataset.f;$$('#docFilter .btn',el).forEach(x=>x.classList.add('btn--ghost'));b.classList.remove('btn--ghost');render();}};
+  render();
+}
+
+/* ---------- Templates ---------- */
+function viewTemplates(el){
+  const render=()=>{$('#tplList',el).innerHTML=forms().map(f=>`<div class="panel" style="margin-bottom:12px" data-f="${f.id}">
+    <div class="btnrow" style="justify-content:space-between;margin-bottom:8px">
+      <div class="btnrow"><input value="${esc(f.name)}" data-k="name" style="width:260px"><input value="${esc(f.cat)}" data-k="cat" style="width:150px" placeholder="category"></div>
+      <div class="btnrow"><button class="btn btn--sm" data-dup="${f.id}">Duplicate</button><button class="btn btn--sm btn--ghost" data-delf="${f.id}">Delete</button></div></div>
+    ${f.sections.map((sec,si)=>`<div style="border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px">
+      <div class="btnrow" style="justify-content:space-between;margin-bottom:6px"><input value="${esc(sec.title)}" data-sec="${si}" style="width:220px;font-weight:600">
+        <button class="btn btn--sm btn--ghost" data-addfield="${si}">${icon('plus')} field</button></div>
+      ${sec.fields.map((fl,fi)=>`<div class="btnrow" style="margin-bottom:5px"><input value="${esc(fl.label)}" data-fl="${si}:${fi}" style="flex:1">
+        <select data-flt="${si}:${fi}" style="width:130px">${['text','textarea','select','number'].map(t=>`<option ${t===fl.type?'selected':''}>${t}</option>`).join('')}</select>
+        <button class="iconbtn btn btn--sm btn--ghost" data-delfield="${si}:${fi}">${icon('trash')}</button></div>`).join('')}
+    </div>`).join('')}
+    <button class="btn btn--sm btn--ghost" data-addsec="${f.id}">${icon('plus')} section</button></div>`).join('');
+    wireTpl();
+  };
+  const wireTpl=()=>{$$('[data-f]',el).forEach(card=>{const fid=card.dataset.f;const getF=()=>forms().find(x=>x.id===fid);
+    $$('[data-k]',card).forEach(inp=>{if(inp.closest('[data-sec]'))return;inp.onchange=()=>{const fs=forms();const f=fs.find(x=>x.id===fid);f[inp.dataset.k]=inp.value;saveForms(fs);};});
+    $$('[data-sec]',card).forEach(inp=>inp.onchange=()=>{const fs=forms();const f=fs.find(x=>x.id===fid);f.sections[+inp.dataset.sec].title=inp.value;saveForms(fs);});
+    $$('[data-fl]',card).forEach(inp=>inp.onchange=()=>{const [si,fi]=inp.dataset.fl.split(':').map(Number);const fs=forms();fs.find(x=>x.id===fid).sections[si].fields[fi].label=inp.value;saveForms(fs);});
+    $$('[data-flt]',card).forEach(inp=>inp.onchange=()=>{const [si,fi]=inp.dataset.flt.split(':').map(Number);const fs=forms();fs.find(x=>x.id===fid).sections[si].fields[fi].type=inp.value;saveForms(fs);});
+    $$('[data-delfield]',card).forEach(b=>b.onclick=()=>{const [si,fi]=b.dataset.delfield.split(':').map(Number);const fs=forms();fs.find(x=>x.id===fid).sections[si].fields.splice(fi,1);saveForms(fs);render();});
+    $$('[data-addfield]',card).forEach(b=>b.onclick=()=>{const fs=forms();fs.find(x=>x.id===fid).sections[+b.dataset.addfield].fields.push({id:uid('fld'),label:'New field',type:'text'});saveForms(fs);render();});
+    $('[data-addsec]',card).onclick=()=>{const fs=forms();fs.find(x=>x.id===fid).sections.push({title:'New section',fields:[]});saveForms(fs);render();};
+    $('[data-dup]',card).onclick=()=>{const fs=forms();const f=JSON.parse(JSON.stringify(fs.find(x=>x.id===fid)));f.id=uid('form');f.name+=' (copy)';fs.push(f);saveForms(fs);render();};
+    $('[data-delf]',card).onclick=()=>{if(confirm('Delete this template?')){saveForms(forms().filter(x=>x.id!==fid));render();}};
+  });};
+  el.innerHTML=`<div class="view"><div class="page-head"><h2>Report Templates</h2><p>Customize the forms officers fill out — rename, add/remove sections and fields, duplicate, or build a new one. This is how you turn the generic starters into your official paperwork.</p></div>
+    ${seedFormNotice}
+    <div class="btnrow" style="margin-bottom:14px"><button class="btn btn--red" id="newForm">${icon('plus')} New template</button>
+      <button class="btn btn--ghost" id="resetForms">Reset to defaults</button></div>
+    <div id="tplList"></div></div>`;
+  $('#newForm',el).onclick=()=>{const fs=forms();fs.push({id:uid('form'),name:'New Form',cat:'Administration',sections:[{title:'Section 1',fields:[{id:uid('fld'),label:'Field',type:'text'}]}]});saveForms(fs);render();};
+  $('#resetForms',el).onclick=()=>{if(confirm('Reset all templates to defaults? Custom templates will be lost.')){Store.set('forms',seedForms());render();}};
+  render();
+}
+
+/* ---------- Settings & Integrations ---------- */
+function viewSettings(el){
+  const p=profile();const s=settings();
+  el.innerHTML=`<div class="view"><div class="page-head"><h2>Settings & Integrations</h2><p>Your profile feeds email signatures and report headers. Endpoints connect the app to the FDNY cloud/intranet and an optional AI writing service.</p></div>
+    <div class="section"><div class="section__title"><h3>Officer profile</h3><span class="rule"></span></div>
+      <div class="panel grid g3">
+        <label class="fld"><span class="k">Name</span><input id="p_name" value="${esc(p.name)}"></label>
+        <label class="fld"><span class="k">Rank</span><select id="p_rank">${RANKS.map(r=>`<option ${r===p.rank?'selected':''}>${r}</option>`).join('')}</select></label>
+        <label class="fld"><span class="k">Unit / assignment</span><input id="p_unit" value="${esc(p.unit)}" placeholder="Engine 000 / Battalion 00"></label>
+        <label class="fld"><span class="k">Email</span><input id="p_email" value="${esc(p.email)}"></label>
+        <label class="fld"><span class="k">Phone</span><input id="p_phone" value="${esc(p.phone)}"></label>
+      </div>
+      <div class="panel" style="margin-top:12px">
+        <div class="btnrow" style="justify-content:space-between;margin-bottom:10px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:0"><input type="checkbox" id="s_usecustom" style="width:auto" ${s.useCustomSig?'checked':''}> Use a custom signature block in emails</label>
+          <button class="btn btn--sm" id="s_buildsig">Build from profile ↑</button>
+        </div>
+        <span class="k" style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);margin-bottom:6px">Signature block</span>
+        <textarea id="s_sig" placeholder="Type your signature block here — e.g.&#10;Lt. Sam Rivera&#10;Engine 000 / Battalion 00, FDNY&#10;srivera@fdny.example · 555-0100" style="min-height:120px;font-family:var(--font-mono);font-size:12.5px">${esc(s.signature||'')}</textarea>
+        <span class="eyebrow" style="display:block;margin-top:12px">Effective signature (appended to emails)</span>
+        <div class="preview" style="min-height:auto;margin-top:6px" id="sigPrev"></div>
+      </div>
+    </div>
+    <div class="section"><div class="section__title"><h3>Default tone</h3><span class="rule"></span></div>
+      <div class="panel grid g2">
+        <label class="fld"><span class="k">Professionalism</span><input type="range" id="s_form" min="1" max="5" value="${s.formality}"><div class="slider-row"><span>Less</span><span>More</span></div></label>
+        <label class="fld"><span class="k">Directness</span><input type="range" id="s_dir" min="1" max="5" value="${s.directness}"><div class="slider-row"><span>Less</span><span>More</span></div></label>
+      </div></div>
+    <div class="section"><div class="section__title"><h3>Integrations</h3><span class="rule"></span></div>
+      <div class="notice"><span>ⓘ</span><div>Store <b>endpoints only</b>, not secrets. Real FDNY cloud/intranet systems are internal — point these at your agency's API or a proxy that handles authentication. Until then, everything works offline and can be exported.</div></div>
+      <div class="panel grid g3">
+        <label class="fld"><span class="k">Intranet endpoint (emails/memos)</span><input id="s_intra" value="${esc(s.intranetEndpoint)}" placeholder="https://intranet.example/api/mail"></label>
+        <label class="fld"><span class="k">Cloud endpoint (reports/docs)</span><input id="s_cloud" value="${esc(s.cloudEndpoint)}" placeholder="https://cloud.example/api/docs"></label>
+        <label class="fld"><span class="k">AI writing endpoint (optional)</span><input id="s_ai" value="${esc(s.aiEndpoint)}" placeholder="https://your-llm-proxy/api">
+          <span class="help">POST {system,prompt} → {text}. Enables "Improve with AI".</span></label>
+      </div></div>
+    <div class="btnrow" style="margin:8px 0 18px"><button class="btn btn--red" id="saveAll">Save settings</button>
+      <button class="btn" id="pushNow">Push queue now</button>
+      <button class="btn btn--ghost" id="expAll">Export all (JSON)</button>
+      <label class="btn btn--ghost" style="cursor:pointer">Import JSON<input type="file" accept="application/json" id="impFile" style="display:none"></label>
+      <span id="setMsg" style="color:var(--text-dim);font-size:12px"></span></div>
+    <div class="section"><div class="section__title"><h3>Sync queue</h3><span class="rule"></span><span class="tag">${pendingSync()} pending</span></div>
+      <div class="panel panel--pad0" id="qList"></div></div>
+  </div>`;
+  const drawSig=()=>{$('#sigPrev',el).textContent=signature()||'(fill in your profile, or type a signature block below)';};
+  $('#s_sig',el).addEventListener('input',()=>{const st=settings();st.signature=$('#s_sig',el).value;saveSettings(st);drawSig();});
+  $('#s_usecustom',el).addEventListener('change',()=>{const st=settings();st.useCustomSig=$('#s_usecustom',el).checked;saveSettings(st);drawSig();});
+  $('#s_buildsig',el).onclick=()=>{$('#s_sig',el).value=autoSignature();const st=settings();st.signature=autoSignature();st.useCustomSig=true;$('#s_usecustom',el).checked=true;saveSettings(st);drawSig();};
+  ['p_name','p_rank','p_unit','p_email','p_phone'].forEach(id=>$('#'+id,el).addEventListener('input',()=>{
+    saveProfile({name:$('#p_name',el).value,rank:$('#p_rank',el).value,unit:$('#p_unit',el).value,email:$('#p_email',el).value,phone:$('#p_phone',el).value});drawSig();renderTop();}));
+  const drawQ=()=>{const q=syncQueue();$('#qList',el).innerHTML=q.length?q.slice(0,50).map(it=>`<div class="doc-row"><span class="pill ${it.status==='sent'?'pill--green':it.status==='error'?'pill--red':'pill--amber'}">${it.status}</span>
+    <div class="di"><div class="dt">${esc(it.summary)}</div><div class="dm">${it.kind} · ${fmtDate(it.ts)}</div></div></div>`).join(''):'<div class="empty">Queue empty.</div>';};
+  $('#saveAll',el).onclick=()=>{saveSettings(Object.assign({},settings(),{formality:+$('#s_form',el).value,directness:+$('#s_dir',el).value,
+    intranetEndpoint:$('#s_intra',el).value.trim(),cloudEndpoint:$('#s_cloud',el).value.trim(),aiEndpoint:$('#s_ai',el).value.trim(),
+    signature:$('#s_sig',el).value,useCustomSig:$('#s_usecustom',el).checked}));$('#setMsg',el).textContent='Saved.';};
+  $('#pushNow',el).onclick=async()=>{$('#setMsg',el).textContent='Pushing…';const n=await pushAll();$('#setMsg',el).textContent=(settings().cloudEndpoint||settings().intranetEndpoint)?`Pushed ${n} item(s).`:'No endpoints set — items stay queued.';drawQ();renderNav();};
+  $('#expAll',el).onclick=()=>downloadFile('fdny-admin-export.json','application/json',JSON.stringify({exportedAt:nowISO(),profile:profile(),settings:settings(),docs:docs(),forms:forms(),tasks:tasksList(),taskDone:taskDone(),sync:syncQueue()},null,2));
+  $('#impFile',el).onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());
+    if(d.profile)Store.set('profile',d.profile);if(d.settings)Store.set('settings',d.settings);if(d.docs)Store.set('docs',d.docs);if(d.forms)Store.set('forms',d.forms);if(d.tasks)Store.set('tasks',d.tasks);if(d.taskDone)Store.set('taskDone',d.taskDone);if(d.sync)Store.set('sync',d.sync);
+    $('#setMsg',el).textContent='Imported. Reloading…';setTimeout(()=>route(),400);}catch(err){$('#setMsg',el).textContent='Import failed: '+err.message;}};
+  drawSig();drawQ();
+}
+
+/* ---------- Reference ---------- */
+const REFERENCES=[
+  {t:'NYC Fire Code (2022)',s:'Public — code in force (Local Law 47 of 2022)',u:'https://www.nyc.gov/site/fdny/codes/fire-code/fire-code.page'},
+  {t:'FDNY rules — Title 3 RCNY',s:'Public — Fire Department rules',u:'https://www.nyc.gov/site/fdny/codes/rules/rules.page'},
+  {t:'DCAS forms & civil-service info',s:'Public — city administrative resources',u:'https://www.nyc.gov/site/dcas/index.page'},
+];
+const seedFormNotice=`<div class="notice"><span>ⓘ</span><div><b>Generic templates.</b> These are starting-point forms, not official FDNY documents (which are internal). Customize them in <a href="#templates">Templates</a> to match your official AARs, inspection reports, and memos, or add references in <code>content/manifest.json</code>.</div></div>`;
+function viewReference(el){
+  el.innerHTML=`<div class="view"><div class="page-head"><h2>Reference & Sources</h2><p>Public resources, plus a slot for your official FDNY forms and directives.</p></div>
+    <div class="notice"><span>ⓘ</span><div>Official FDNY forms and administrative directives are internal/intranet. Drop authorized copies into <code>/content</code> and list them in <code>content/manifest.json</code>; when hosted, they appear here. Then rebuild the matching templates in <a href="#templates">Templates</a>.</div></div>
+    <div class="panel panel--pad0">${REFERENCES.map(r=>`<div class="doc-row"><span class="pill pill--dim" style="background:rgba(233,196,106,.15);color:var(--gold)">SRC</span>
+      <div class="di"><div class="dt">${esc(r.t)}</div><div class="dm">${esc(r.s)}</div></div>
+      <a class="btn btn--sm btn--ghost" href="${r.u}" target="_blank" rel="noopener">Open ↗</a></div>`).join('')}<div id="refExtra"></div></div></div>`;
+  loadManifest().then(m=>{if(m&&Array.isArray(m.references)&&m.references.length){$('#refExtra',el).innerHTML=m.references.map(r=>`<div class="doc-row"><span class="pill pill--cyan">DOC</span>
+    <div class="di"><div class="dt">${esc(r.title||'')}</div><div class="dm">${esc(r.note||'from manifest')}</div></div>
+    ${r.file||r.url?`<a class="btn btn--sm btn--ghost" href="${esc(r.file||r.url)}" target="_blank" rel="noopener">Open ↗</a>`:'<span class="pill pill--amber">Add file</span>'}</div>`).join('');}});
+}
+let MANIFEST=null;
+async function loadManifest(){if(MANIFEST!==null)return MANIFEST;try{const r=await fetch('content/manifest.json',{cache:'no-store'});MANIFEST=r.ok?await r.json():{};}catch(e){MANIFEST={};}return MANIFEST;}
+
+/* ---------- boot ---------- */
+forms();tasksList();renderTop();renderNav();if(!location.hash)location.hash='#dashboard';route();
+</script>
+</body>
+</html>
